@@ -24,34 +24,16 @@
 
     <Button
         android:id="@+id/btnStartService1"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        android:layout_width="204dp"
+        android:layout_height="79dp"
         android:onClick="startService"
         android:text="@string/start_service" />
 
     <Button
         android:id="@+id/btnStopService"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        android:layout_width="204dp"
+        android:layout_height="90dp"
         android:onClick="stopService"
         android:text="@string/stop_service" />
-    
-    <Button
-        android:id="@+id/empty"
-      	android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/hello_world" />
-
-    <Button
-        android:id="@+id/btincrease"
-      	android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/increase" />
-
-    <Button
-        android:id="@+id/btdecrease"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/dicrease" />
 
 </LinearLayout>
