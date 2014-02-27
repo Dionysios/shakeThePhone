@@ -19,12 +19,15 @@ public class MyService extends Service implements SensorEventListener {
 	// MediaPlayer mediaPlayer;
 	private SensorManager sensorManager = null;
 	private Sensor sensor = null;
-	// private static final float SHAKE_THRESHOLD_GRAVITY = 2.7F;
-/*	private static final float SHAKE_THRESHOLD_GRAVITY = 0.1F;
-	private static final int DOUBLE_SHAKE_MS = 100;
-	private static final int SHAKE_COUNT_RESET_TIME_MS = 3000;*/
+	private static final double MIN_FORCE_X = 8;
+	private static final double MIN_FORCE_Z = 14;
+	private static final double MAX_FORCE_Z = 8;
 
-	private long lastUpdate;
+	int counter = 0;
+	int counter_Z = 0;
+
+	private static final int MAX_TOTAL_DURATION_OF_SHAKE = 1000;
+	private static final int MIN_TOTAL_DURATION_OF_SHAKE = 300;
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -37,14 +40,14 @@ public class MyService extends Service implements SensorEventListener {
 		// TODO Auto-generated method stub
 		super.onCreate();
 		Toast.makeText(this, "Service Created", Toast.LENGTH_SHORT).show();
-		Log.e("MyService", "Create service");
+		
 		sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-		Log.e("MyService", "Create serviceManger");
+		
 		sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-		Log.e("MyService", "Create Accelerometer");
+		
 		sensorManager.registerListener(this, sensor,
 				SensorManager.SENSOR_DELAY_NORMAL);
-		Log.e("MyService", "Register Accelerometer");
+		
 	}
 
 	@Override
@@ -57,9 +60,9 @@ public class MyService extends Service implements SensorEventListener {
 	public void onDestroy() {
 		super.onDestroy();
 		Toast.makeText(this, "Service Stoped", Toast.LENGTH_SHORT).show();
-		 // stop the sensor and service
-        sensorManager.unregisterListener(this);
-        stopSelf();
+		// stop the sensor and service
+		sensorManager.unregisterListener(this);
+		stopSelf();
 		Log.e("MyService", "Destroy service");
 	}
 
@@ -69,7 +72,6 @@ public class MyService extends Service implements SensorEventListener {
 				.getSystemService(Context.AUDIO_SERVICE);
 		audioManager.adjustVolume(AudioManager.ADJUST_RAISE,
 				AudioManager.FLAG_SHOW_UI);
-		// audioManager.setRingerMode(AudioManager.ADJUST_LOWER);
 	}
 
 	// decrease volume by one
@@ -78,7 +80,6 @@ public class MyService extends Service implements SensorEventListener {
 				.getSystemService(Context.AUDIO_SERVICE);
 		audioManager.adjustVolume(AudioManager.ADJUST_LOWER,
 				AudioManager.FLAG_SHOW_UI);
-		// audioManager.setRingerMode(AudioManager.ADJUST_RAISE);
 	}
 
 	@Override
@@ -88,47 +89,53 @@ public class MyService extends Service implements SensorEventListener {
 
 	@Override
 	public void onSensorChanged(SensorEvent event) {
-		
+
 		float[] values = event.values;
 		// Movement
 		float x = values[0];
 		float y = values[1];
 		float z = values[2];
 
-		float accelaration = 9;
-		float accelaration2 = 5;
-		float accelationRealz = z ;
-		Log.e("MyService", "Get initial y" + accelationRealz);
-		float accelationRealx = x ;
-		Log.e("MyService", "Get  initial x" + accelationRealx);
-		//
-		long actualTime = System.currentTimeMillis();
+		float lastX = 0;
+		float lasty = 0;
+		float lastz = 0;
+		// float totalMovement = Math.abs(x + y + z - lastX - lastY - lastZ);
+
+		double totalMovement_X = x - lastX;
+		Log.e("MyService", "Get  initial X" + totalMovement_X);
+		double totalMovement_Z = (z + y) - (lasty + lastz);
+		Log.e("MyService", "Get  initial z" + totalMovement_Z);
 		
-	//	Log.e("MyService", "Get time" + actualTime);
-		if (accelationRealz > accelaration) {
-		//	Log.e("MyService", "Get y" + accelationRealy);
-		//	if (lastUpdate - actualTime > 200) {
-		//		setRingerLower();
-		//		Log.e("MyService", "Reduce one");
-		//	} else {
-				setRingerOneMore();
-				Log.e("MyService", "Increase one");
-			}
-	//	}
-		if (accelationRealx > accelaration2) {
-		//	Log.e("MyService", "Get x" + accelationRealx);
-		//	if (lastUpdate - actualTime > 200) {
-				setRingerLower();
-				Log.e("MyService", "Reduce one");
-		//	} else {
-		//		setRingerOneMore();
-		//		Log.e("MyService", "Increase one");
-		//	}
+		// detect movement
+		if (totalMovement_X > MIN_FORCE_X) {
+			counter++;
+			Log.e("MyService", "Get movements X" + counter);
+			x = 0;
+		} 
+		lastX = x;
+		lasty = y;
+		lastz = z;
+		//else {
+			//x = 0;
+		//}
+		
+		if (counter == 2 && totalMovement_X > MIN_FORCE_X) {
+			setRingerOneMore();
+			Log.e("MyService", "Increase one");
+			counter = 0;
 		}
-		 accelationRealx = 0;
-		 accelationRealz  = 0;
-		 Log.e("MyService", "Get second z" + y);
-	//	lastUpdate = System.currentTimeMillis() + 100;
-	//	Log.e("MyService", "Get second time" + lastUpdate);
+		
+		if (totalMovement_Z > MIN_FORCE_Z ) {
+			counter_Z++;
+			Log.e("MyService", "Get movements Z" + counter_Z);
+			z = 0;
+		} 
+		if (counter_Z == 2 && totalMovement_Z > MIN_FORCE_Z) {
+			setRingerLower();
+			Log.e("MyService", "Decrease one");
+			counter_Z = 0;
+			totalMovement_Z = 0;
+		}
+
 	}
 }
